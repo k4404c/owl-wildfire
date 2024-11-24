@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import SensorTable from './components/SensorTable';
+import { username,password } from './env.js';
 
 const dataFormatter = (number) => {
   return Intl.NumberFormat('us').format(number).toString();
@@ -38,8 +39,8 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          Username: "smallaj1@asu.edu",
-          Password: "W2AB#6~5$5E+aCu",
+          Username: username,
+          Password: password,
         }),
       });
 
