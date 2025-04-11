@@ -1,0 +1,27 @@
+.comparison-chart {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.chart-title {
+  color: #334155;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Recharts customization */
+.recharts-default-tooltip {
+  background-color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  box-shadow: var(--shadow-md) !important;
+  padding: 1rem !important;
+}
+
+.recharts-tooltip-label {
+  color: #64748b !important;
+  margin-bottom: 0.5rem !important;
+} 
