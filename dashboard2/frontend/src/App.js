@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import SensorTable from './components/SensorTable';
 import { username,password } from './env.js';
-import { checkFireConditions, sendFireAlert } from './utils/fireAlert';
+import { sendFireAlert } from './utils/fireAlert';
 
 const dataFormatter = (number) => {
   return Intl.NumberFormat('us').format(number).toString();
@@ -13,6 +13,7 @@ function App() {
   const [selectedView, setSelectedView] = useState(1);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [lastAlertTime, setLastAlertTime] = useState(null);
 
   const parsePayloadData = (payloadString) => {
     const temperatureMatch = payloadString.match(/Temp: ([\d.]+)/);
@@ -50,7 +51,7 @@ function App() {
       const { token } = await authResponse.json();
 
       // Then fetch the sensor data
-      const startTimestamp = Math.floor(new Date('2025-01-01').getTime() / 1000);
+      const startTimestamp = Math.floor(new Date('2025-03-01').getTime() / 1000);
       const endTimestamp = Math.floor(Date.now() / 1000);
       
       const dataResponse = await fetch(
@@ -71,34 +72,68 @@ function App() {
       // Process the data with fixed parsing
       const processedData = rawData.map((item) => {
         try {
-          // Parse the payload string to get the object
           const data = JSON.parse(item.payload);
           
-          // Parse temperature and pressure from the Payload string
-          const { temperature, pressure } = parsePayloadData(data.Payload);
-
-          // Check for fire conditions
-          const alerts = checkFireConditions({ temperature, pressure });
-          if (alerts.length > 0) {
-            sendFireAlert({ temperature, pressure }, alerts);
+          // Only process GPS events
+          if (item.eventType !== "gps") {
+            return null;
           }
 
-          return {
+          const cleanPayload = data.Payload.replace(/\s+/g, ' ').trim();
+          console.log('Cleaned payload:', cleanPayload); // Debug log
+
+          // Updated regex patterns to match the actual format
+          const matches = {
+            temperature: cleanPayload.match(/Temp:([-\d.]+)/),
+            humidity: cleanPayload.match(/Hum:([-\d.]+)/),
+            pressure: cleanPayload.match(/Press:([-\d.]+)/),
+            altitude: cleanPayload.match(/Alt:([-\d.]+)/),
+            gas: cleanPayload.match(/Gas:([-\d.]+)/),
+            prediction: cleanPayload.match(/Pred:([-\d.]+)/),
+            latitude: cleanPayload.match(/Lat:([-\d.]+)/),
+            longitude: cleanPayload.match(/Lng:([-\d.]+)/)
+          };
+
+          const processedItem = {
             timestamp: new Date(item.createdAt).toLocaleString(),
+            rawTimestamp: new Date(item.createdAt),
             deviceId: data.DeviceID,
             messageId: data.MessageID,
-            temperature,
-            pressure,
+            temperature: matches.temperature ? parseFloat(matches.temperature[1]) : null,
+            humidity: matches.humidity ? parseFloat(matches.humidity[1]) : null,
+            pressure: matches.pressure ? parseFloat(matches.pressure[1]) : null,
+            altitude: matches.altitude ? parseFloat(matches.altitude[1]) : null,
+            gas: matches.gas ? parseFloat(matches.gas[1]) : null,
+            prediction: matches.prediction ? parseInt(matches.prediction[1]) : null,
+            latitude: matches.latitude ? parseFloat(matches.latitude[1]) : null,
+            longitude: matches.longitude ? parseFloat(matches.longitude[1]) : null,
             duckType: data.duckType,
             hops: data.hops,
             path: data.path,
-            rawPayload: data.Payload
+            rawPayload: data.Payload,
+            eventType: item.eventType
           };
+
+          // Debug log
+          console.log('Processed item:', processedItem);
+
+          // Only send alerts for new data points with prediction = 1
+          const isNewDataPoint = processedItem.rawTimestamp > (Date.now() - 60000);
+          const isFireRisk = processedItem.prediction === 1;
+          
+          if (isNewDataPoint && isFireRisk && 
+              (!lastAlertTime || processedItem.rawTimestamp > lastAlertTime)) {
+            sendFireAlert(processedItem);
+            setLastAlertTime(processedItem.rawTimestamp);
+            console.log('Fire alert triggered for new data point:', processedItem);
+          }
+
+          return processedItem;
         } catch (err) {
-          console.warn('Error processing data point:', err, item);
+          console.warn('Error processing data point:', err, item.payload);
           return null;
         }
-      }).filter(Boolean); // Remove any null entries from failed parsing
+      }).filter(Boolean);
 
       if (processedData.length === 0) {
         setError('No valid data points found');
@@ -107,6 +142,16 @@ function App() {
 
       // Sort data by timestamp (newest first)
       processedData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      if (processedData.length > 0) {
+        const latestFireRisk = processedData.find(item => item.prediction === 1);
+        if (latestFireRisk) {
+          console.log('Found fire risk data point:', latestFireRisk);
+          sendFireAlert(latestFireRisk);
+        } else {
+          console.log('No data points with prediction = 1 found');
+        }
+      }
       setData(processedData);
     } catch (err) {
       setError(err.message);

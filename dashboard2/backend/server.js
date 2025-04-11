@@ -41,7 +41,12 @@ const WebSocket = require('ws');
 const axios = require('axios');
 const express = require('express');
 const app = express();
+const nodemailer = require('nodemailer');
+const cors = require('cors');
+require('dotenv').config();
 
+// Add cors middleware
+app.use(cors());
 app.use(express.json());
 
 const wss = new WebSocket.Server({ port: 8081 });
@@ -129,11 +134,119 @@ console.log("About to start server...");
 console.log("Server started successfully on port 8081");
 
 // If you're using Express or similar:
-app.listen(3010, () => {
-  console.log(`Server running on port 3010`);
-}).on('error', (err) => {
-  console.error('Server failed to start:', err);
-});
 
 
+app.post('/api/send-alert', async (req, res) => {
+    const { sensorData, alerts } = req.body;
+    
+    console.log('Received alert request:', { sensorData, alerts }); // Debug log
+    
+    let transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+      });
+  
+    try {
+        await transporter.sendMail({
+            from: `"Owls Inc" <${process.env.EMAIL_USER}>`,
+            to: `${process.env.EMAIL_USER}`, // Your email address
+            subject: "🚨 ALERT: Forest Fire Risk Detected",
+            text:  alerts.join('\n\n') + `
+        
+            Location Information:
+            - Latitude: ${sensorData.latitude}
+            - Longitude: ${sensorData.longitude}
+            
+            IMMEDIATE ACTION REQUIRED
+            Please investigate this location immediately.
+            
+            This is an automated alert based on our fire prediction model.`,
+            html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #ff4444; text-align: center;">🚨 FIRE RISK ALERT 🚨</h1>
+        
+        <div style="background-color: #fff3f3; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <h2 style="color: #333;">Alert Details:</h2>
+            ${alerts.map(alert => `<p style="color: #666;">${alert}</p>`).join('')}
+        </div>
+
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <h2 style="color: #333;">Location Information:</h2>
+            <p style="color: #666;">
+                <strong>Latitude:</strong> ${sensorData.latitude}<br>
+                <strong>Longitude:</strong> ${sensorData.longitude}<br>
+                <strong>Altitude:</strong> ${sensorData.altitude}m
+            </p>
+            
+            <div style="margin-top: 10px;">
+                <a href="https://www.google.com/maps?q=${sensorData.latitude},${sensorData.longitude}" 
+                   style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                    View on Google Maps
+                </a>
+            </div>
+        </div>
+
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <h2 style="color: #333;">Sensor Readings:</h2>
+            <p style="color: #666;">
+                <strong>Temperature:</strong> ${sensorData.temperature}°C<br>
+                <strong>Humidity:</strong> ${sensorData.humidity}%<br>
+                <strong>Pressure:</strong> ${sensorData.pressure} hPa<br>
+                <strong>Gas Level:</strong> ${sensorData.gas}<br>
+                <strong>Prediction:</strong> ${sensorData.prediction}
+            </p>
+        </div>
+
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <h2 style="color: #333;">Device Information:</h2>
+            <p style="color: #666;">
+                <strong>Device ID:</strong> ${sensorData.deviceId}<br>
+                <strong>Message ID:</strong> ${sensorData.messageId}<br>
+                <strong>Event Type:</strong> ${sensorData.eventType}<br>
+                <strong>Time:</strong> ${sensorData.timestamp}
+            </p>
+        </div>
+
+        <div style="background-color: #ff4444; color: white; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center;">
+            <h2 style="margin: 0;">IMMEDIATE ACTION REQUIRED</h2>
+            <p>Please investigate this location immediately.</p>
+        </div>
+
+        <p style="color: #666; font-size: 12px; text-align: center;">
+            This is an automated alert based on our fire prediction model.<br>
+            Generated at ${new Date().toLocaleString()}
+        </p>
+    </div>`,
+          });
+      await transporter.sendMail({
+        from: 'satwikug@gmail.com',
+        to: process.env.EMAIL_USER, // Send to yourself for testing
+        subject: '🚨 ALERT: Forest Fire Risk Detected',
+        text: alerts.join('\n\n') + `
+        
+        Location Information:
+        - Latitude: ${sensorData.latitude}
+        - Longitude: ${sensorData.longitude}
+        
+        IMMEDIATE ACTION REQUIRED
+        Please investigate this location immediately.
+        
+        This is an automated alert based on our fire prediction model.`
+      });
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Email error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.listen(3010, () => {
+    console.log(`Server running on port 30`);
+  }).on('error', (err) => {
+    console.error('Server failed to start:', err);
+  });
 
