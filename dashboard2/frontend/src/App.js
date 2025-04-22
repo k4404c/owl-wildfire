@@ -14,6 +14,7 @@ import 'leaflet/dist/leaflet.css';
 import SensorTable from './components/SensorTable';
 import { sendFireAlert } from './utils/fireAlert';
 import Header from './components/Header';
+import { API_BASE_URL } from './config';
 
 // Green Icon (Prediction 0)
 const greenIcon = new L.Icon({
@@ -48,11 +49,11 @@ function App() {
     setError(null);
 
     try {
-      // Fetch data from our backend proxy
-      const dataResponse = await fetch('http://localhost:3010/api/sensor-data');
+      const dataResponse = await fetch(`${API_BASE_URL}/api/sensor-data`);
       
       if (!dataResponse.ok) {
-        throw new Error('Failed to fetch sensor data');
+        const errorData = await dataResponse.json();
+        throw new Error(errorData.error || 'Failed to fetch sensor data');
       }
 
       const rawData = await dataResponse.json();

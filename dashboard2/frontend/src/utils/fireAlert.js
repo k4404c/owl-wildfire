@@ -1,6 +1,6 @@
 export const sendFireAlert = async (sensorData) => {
   try {
-    const response = await fetch('http://localhost:3010/api/send-alert', {
+    const response = await fetch('https://owl-wildfire-9swm.vercel.app/api/send-alert', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -26,10 +26,9 @@ export const sendFireAlert = async (sensorData) => {
       throw new Error('Failed to send alert');
     }
     
-    console.log('Fire alert sent successfully');
-    return true;
+    return await response.json();
   } catch (error) {
-    console.error('Failed to send fire alert:', error);
-    return false;
+    console.error('Error sending alert:', error);
+    throw error;
   }
 }; 
