@@ -1,6 +1,6 @@
 export const sendFireAlert = async (sensorData) => {
   try {
-    const response = await fetch('https://owl-wildfire-9swm.vercel.app/api/send-alert', {
+    const response = await fetch('https://owl-backend.vercel.app/api/send-alert', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
