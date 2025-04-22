@@ -244,6 +244,89 @@ app.post('/api/send-alert', async (req, res) => {
     }
   });
 
+  // Add these routes after your existing code but before app.listen()
+
+  // Route to get authentication token
+  app.get('/api/auth', async (req, res) => {
+    try {
+      const authResponse = await fetch(
+        "https://beta.owldms.com/owl/api/userdata/authenticate",
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            "Username": "smallaj1@asu.edu",
+            "Password": "W2AB#6~5$5E+aCu",
+          }),
+          headers: {
+            'Content-type': 'application/json; charset=UTF-8'
+          }
+        }
+      );
+
+      if (!authResponse.ok) {
+        throw new Error('Authentication failed');
+      }
+
+      const data = await authResponse.json();
+      res.json({ token: data.token });
+    } catch (error) {
+      console.error('Auth error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Route to get sensor data
+  app.get('/api/sensor-data', async (req, res) => {
+    try {
+      // First get the auth token
+      const authResponse = await fetch(
+        "https://beta.owldms.com/owl/api/userdata/authenticate",
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            "Username": process.env.USERNAME,
+            "Password": process.env.PASSWORD,
+          }),
+          headers: {
+            'Content-type': 'application/json; charset=UTF-8'
+          }
+        }
+      );
+
+      if (!authResponse.ok) {
+        throw new Error('Authentication failed');
+      }
+
+      const authData = await authResponse.json();
+      const token = authData.token;
+
+      // Get the time parameters from query string or use defaults
+      const startTimestamp = req.query.start || Math.floor(new Date('2025-03-01').getTime() / 1000);
+      const endTimestamp = req.query.end || Math.floor(Date.now() / 1000);
+
+      // Then fetch the sensor data
+      const dataResponse = await fetch(
+        `https://beta.owldms.com/owl/api/userdata/getRawData?start=${startTimestamp}&end=${endTimestamp}&papaId=ASUPAPA2`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!dataResponse.ok) {
+        throw new Error('Failed to fetch sensor data');
+      }
+
+      const sensorData = await dataResponse.json();
+      res.json(sensorData);
+
+    } catch (error) {
+      console.error('Data fetch error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.listen(3010, () => {
     console.log(`Server running on port 30`);
   }).on('error', (err) => {

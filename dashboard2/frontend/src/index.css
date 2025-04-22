@@ -24,3 +24,89 @@ code {
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
+
+/* Style the overall control panel */
+.control-panel {
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  align-items: center;
+  gap: 1rem; /* Spacing between elements */
+  padding: 1rem 0; /* Add some vertical padding */
+  margin-bottom: 1.5rem; /* Space below the panel */
+  border-bottom: 1px solid #e2e8f0; /* Subtle separator */
+}
+
+/* Base styles for all buttons in the control panel */
+.control-panel button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem; /* Slightly rounded corners */
+  background-color: #ffffff;
+  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* Subtle shadow */
+}
+
+/* Hover effect for buttons */
+.control-panel button:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+}
+
+/* Style for the Refresh button (if you want it slightly different) */
+.refresh-button {
+  /* Example: Add a specific color */
+  /* background-color: #e0f2fe; */
+  /* color: #0c4a6e; */
+}
+
+/* Container for toggle button groups */
+.duration-toggles,
+.view-toggles {
+  display: flex;
+  gap: 0.5rem; /* Space between buttons within a group */
+  border: 1px solid #e2e8f0; /* Optional: Group border */
+  border-radius: 0.375rem;
+  overflow: hidden; /* Helps with border-radius clipping */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Reset border for buttons inside the toggle groups */
+.duration-toggles button,
+.view-toggles button {
+  border: none;
+  border-radius: 0; /* Remove individual radius */
+  box-shadow: none; /* Remove individual shadow */
+  /* Add a separator */
+  border-right: 1px solid #e2e8f0;
+}
+
+/* Remove border from the last button in each group */
+.duration-toggles button:last-child,
+.view-toggles button:last-child {
+  border-right: none;
+}
+
+
+/* Style for the active toggle button */
+.duration-toggles .active,
+.view-toggles .active {
+  background-color: #3b82f6; /* Example active color (blue) */
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Hover effect specifically for inactive toggle buttons */
+.duration-toggles button:not(.active):hover,
+.view-toggles button:not(.active):hover {
+   background-color: #eff6ff; /* Lighter blue on hover */
+}
+
+/* Ensure active button hover doesn't change background */
+.duration-toggles .active:hover,
+.view-toggles .active:hover {
+  background-color: #3b82f6; /* Keep active color */
+}
