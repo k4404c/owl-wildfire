@@ -10,7 +10,7 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:3001',
-    'https://owl-wildfire.vercel.app'  // Remove trailing slash
+    'https://owl-wildfire1.vercel.app'  // Remove trailing slash
   ],
   methods: ['GET', 'POST'],
   credentials: true
