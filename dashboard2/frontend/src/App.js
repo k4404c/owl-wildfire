@@ -14,7 +14,6 @@ import 'leaflet/dist/leaflet.css';
 import SensorTable from './components/SensorTable';
 import { sendFireAlert } from './utils/fireAlert';
 import Header from './components/Header';
-import { API_BASE_URL } from './config';
 
 // Green Icon (Prediction 0)
 const greenIcon = new L.Icon({
@@ -49,11 +48,11 @@ function App() {
     setError(null);
 
     try {
-      const dataResponse = await fetch(`${API_BASE_URL}/api/sensor-data`);
+      // Fetch data from our backend proxy
+      const dataResponse = await fetch('https://owl-backend.vercel.app/api/sensor-data');
       
       if (!dataResponse.ok) {
-        const errorData = await dataResponse.json();
-        throw new Error(errorData.error || 'Failed to fetch sensor data');
+        throw new Error('Failed to fetch sensor data');
       }
 
       const rawData = await dataResponse.json();
