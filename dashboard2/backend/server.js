@@ -1,16 +1,20 @@
-const express = require('express');
+import express from 'express';
+import nodemailer from 'nodemailer';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+dotenv.config();
+
 const app = express();
-const nodemailer = require('nodemailer');
-const cors = require('cors');
-const fetch = require('node-fetch');
-require('dotenv').config();
 
 // CORS configuration
 app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:3001',
-    'https://owl-wildfire1.vercel.app'  // Remove trailing slash
+    'https://owl-wildfire1.vercel.app'
   ],
   methods: ['GET', 'POST'],
   credentials: true
@@ -146,4 +150,4 @@ app.post('/api/send-alert', async (req, res) => {
 });
 
 // Export the app
-module.exports = app;
+export default app;
