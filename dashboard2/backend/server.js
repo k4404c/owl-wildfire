@@ -81,7 +81,7 @@ app.get('/api/sensor-data', async (req, res) => {
     const token = authData.token;
 
     // Get the time parameters from query string or use defaults
-    const startTimestamp = req.query.start || Math.floor(new Date('2025-03-01').getTime() / 1000);
+    const startTimestamp = req.query.start || Math.floor(Date.now() / 1000) - 24 * 60 * 60; // 1 day ago
     const endTimestamp = req.query.end || Math.floor(Date.now() / 1000);
 
     // Then fetch the sensor data
@@ -108,46 +108,46 @@ app.get('/api/sensor-data', async (req, res) => {
 });
 
 // Alert endpoint
-app.post('/api/send-alert', async (req, res) => {
-  try {
-    const { sensorData, alerts } = req.body;
+// app.post('/api/send-alert', async (req, res) => {
+//   try {
+//     const { sensorData, alerts } = req.body;
     
-    if (!sensorData || !alerts) {
-      return res.status(400).json({ error: 'Missing required data' });
-    }
+//     if (!sensorData || !alerts) {
+//       return res.status(400).json({ error: 'Missing required data' });
+//     }
 
-    let transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    });
+//     let transporter = nodemailer.createTransport({
+//       host: "smtp.gmail.com",
+//       port: 587,
+//       secure: false,
+//       auth: {
+//         user: process.env.EMAIL_USER,
+//         pass: process.env.EMAIL_PASSWORD,
+//       },
+//     });
 
-    await transporter.sendMail({
-      from: `"Owls Inc" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
-      subject: "🚨 ALERT: Forest Fire Risk Detected",
-      text: alerts.join('\n\n') + `
+//     await transporter.sendMail({
+//       from: `"Owls Inc" <${process.env.EMAIL_USER}>`,
+//       to: process.env.EMAIL_USER,
+//       subject: "🚨 ALERT: Forest Fire Risk Detected",
+//       text: alerts.join('\n\n') + `
       
-      Location Information:
-      - Latitude: ${sensorData.latitude}
-      - Longitude: ${sensorData.longitude}
+//       Location Information:
+//       - Latitude: ${sensorData.latitude}
+//       - Longitude: ${sensorData.longitude}
       
-      IMMEDIATE ACTION REQUIRED
-      Please investigate this location immediately.
+//       IMMEDIATE ACTION REQUIRED
+//       Please investigate this location immediately.
       
-      This is an automated alert based on our fire prediction model.`
-    });
+//       This is an automated alert based on our fire prediction model.`
+//     });
 
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Email error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
+//     res.json({ success: true });
+//   } catch (error) {
+//     console.error('Email error:', error);
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 
 // Export the app
 export default app;
